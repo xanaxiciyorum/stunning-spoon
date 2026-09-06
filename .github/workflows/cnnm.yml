@@ -24,20 +24,26 @@ jobs:
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin" -ErrorAction SilentlyContinue
           
           Write-Host "3. Pinggy TCP Tüneli Başlatılıyor..."
-          Start-Process -FilePath "ssh" -ArgumentList "-p 443 -o StrictHostKeyChecking=no -R0:localhost:3389 tcp@free.pinggy.io" -NoNewWindow
+          # Tünel çıktısını log dosyasına yönlendirerek ekrana anında basılmasını sağlıyoruz
+          Start-Process -FilePath "ssh" -ArgumentList "-p 443 -o StrictHostKeyChecking=no -R0:localhost:3389 tcp@free.pinggy.io" -RedirectStandardOutput "pinggy.log" -NoNewWindow
           
           Write-Host "4. GPU Boost (Mesa3D) Hazırlanıyor..."
           $DesktopPath = [Environment]::GetFolderPath("Desktop")
           Invoke-WebRequest "https://github.com/pal1000/mesa-dist-win/releases/download/24.0.7/mesa3d-24.0.7-release-msvc.7z" -OutFile mesa.7z
           Move-Item mesa.7z "$DesktopPath\tmmmGPU_BOOST.7z"
           
-          Write-Host "5. Erişim Bilgileri Hazırlanıyor..."
-          Start-Sleep -s 10
+          Write-Host "5. Erişim Adresi Çözümleniyor..."
+          Start-Sleep -s 8
+          
+          # Pinggy loglarından URL'yi yakalayıp ekrana yazdır
+          if (Test-Path "pinggy.log") {
+              $tunnelInfo = Get-Content "pinggy.log" | Out-String
+              Write-Host "Tünel Logları: $tunnelInfo"
+          }
           
           Write-Host "=================================================================="
           Write-Host "🎉 aMATRIX IS UNSTOPPABLE!"
-          Write-Host "👉 Actions loglarında çıkan 'tcp://...:port' adresini kopyala"
-          Write-Host "👉 Bilgisayarındaki 'Uzak Masaüstü Bağlantısı'na (mstsc) yapıştır!"
+          Write-Host "👉 'mstsc' aç ve loglardaki tcp://... adresini yapıştır!"
           Write-Host "👤 KULLANICI  : runneradmin"
           Write-Host "🔑 ŞİFRE      : (Tanımladığınız RDP_PASSWORD)"
           Write-Host "=================================================================="
