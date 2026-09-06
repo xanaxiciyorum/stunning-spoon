@@ -26,8 +26,9 @@ jobs:
           Write-Host "3. Cloudflare Tunnel İndiriliyor..."
           Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
           
-          Write-Host "4. TCP Tüneli Arka Planda Başlatılıyor..."
-          Start-Process -FilePath ".\cloudflared.exe" -ArgumentList "access tcp --url localhost:3389" -NoNewWindow
+          Write-Host "4. Quick TCP Tüneli Açılıyor..."
+          # Doğru Quick Tunnel komutu: 'tunnel --url rdp://...' veya 'tunnel --url tcp://...'
+          Start-Process -FilePath ".\cloudflared.exe" -ArgumentList "tunnel --url rdp://localhost:3389" -NoNewWindow
           
           Write-Host "5. GPU Boost (Mesa3D) Hazırlanıyor..."
           $DesktopPath = [Environment]::GetFolderPath("Desktop")
@@ -35,14 +36,11 @@ jobs:
           Move-Item mesa.7z "$DesktopPath\tmmmGPU_BOOST.7z"
           
           Write-Host "6. Erişim Bilgileri Bekleniyor..."
-          Start-Sleep -s 12
-          
-          # Cloudflare loglarından aktif URL'yi yakala
-          $logContent = Get-Content "$env:USERPROFILE\.cloudflared\*.log" -ErrorAction SilentlyContinue
+          Start-Sleep -s 10
           
           Write-Host "=================================================================="
           Write-Host "🎉 aMATRIX IS UNSTOPPABLE!"
-          Write-Host "👉 Actions loglarındaki 'trycloudflare.com' adresini RDP'ye yazın."
+          Write-Host "👉 Actions loglarında beliren 'trycloudflare.com' adresini kopyala!"
           Write-Host "👤 KULLANICI  : runneradmin"
           Write-Host "🔑 ŞİFRE      : (Tanımladığınız RDP_PASSWORD)"
           Write-Host "=================================================================="
