@@ -1,5 +1,7 @@
 name: XRRRDP
-on: workflow_dispatch
+
+on:
+  workflow_dispatch:
 
 jobs:
   ignite-windows:
@@ -7,47 +9,36 @@ jobs:
     steps:
       - name: GPU Destekli Tam Kurulum
         env:
-          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
           RDP_PASSWORD: ${{ secrets.RDP_PASSWORD }}
         run: |
           Write-Host "1. RDP ve Kimlik Ayarları Mühürleniyor..."
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-
-          Write-Host "Yönetici ve Şifre Revizyonu..."
+          
+          Write-Host "2. Yönetici ve Şifre Revizyonu..."
           $Password = ConvertTo-SecureString $Env:RDP_PASSWORD -AsPlainText -Force
           $User = Get-LocalUser -Name "runneradmin"
           $User | Set-LocalUser -Password $Password
           Add-LocalGroupMember -Group "Administrators" -Member "runneradmin" -ErrorAction SilentlyContinue
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin" -ErrorAction SilentlyContinue
-
-          Write-Host "3. Ngrok Altyapısı..."
-          Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
-          Expand-Archive ngrok.zip -Force
-          .\ngrok\ngrok.exe config add-authtoken $Env:NGROK_AUTH_TOKEN
-
-          Write-Host "4. Tünel Açılıyor..."
-          Start-Process -FilePath ".\ngrok\ngrok.exe" -ArgumentList "tcp 3389" -NoNewWindow
-
-          Write-Host "5. GPU Boost (Mesa3D) Hazırlanıyor..."
+          
+          Write-Host "3. Serveo Tüneli Açılıyor..."
+          # Arka planda SSH üzerinden 3389 portunu serveo.net'e tünelle
+          Start-Process -FilePath "ssh" -ArgumentList "-o StrictHostKeyChecking=no -R 0:localhost:3389 serveo.net" -NoNewWindow
+          
+          Write-Host "4. GPU Boost (Mesa3D) Hazırlanıyor..."
           $DesktopPath = [Environment]::GetFolderPath("Desktop")
           Invoke-WebRequest "https://github.com/pal1000/mesa-dist-win/releases/download/24.0.7/mesa3d-24.0.7-release-msvc.7z" -OutFile mesa.7z
           Move-Item mesa.7z "$DesktopPath\tmmmGPU_BOOST.7z"
-
-          Start-Sleep -s 15
-
-          Write-Host "6. Erişim Bilgileri (Not Al!)..."
-          $tunnels = (Invoke-RestMethod -Uri "http://localhost:4040/api/tunnels").tunnels
-          $ngrokUrl = $tunnels[0].public_url
-          $cleanUrl = $ngrokUrl.Replace("tcp://", "")
-
+          
+          Write-Host "5. Erişim Bilgileri (Logs Sekmesini Kontrol Et!)..."
+          Start-Sleep -s 10
           Write-Host "=================================================================="
           Write-Host "🎉 aMATRIX IS UNSTOPPABLE!"
-          Write-Host "👉 RDP ADRESİ : $cleanUrl"
+          Write-Host "👉 Tünel Aktif Edildi. Yukarıdaki SSH çıktısında verilen serveo.net portunu kullanın."
           Write-Host "👤 KULLANICI  : runneradmin"
-          Write-Host "🔑 ŞİFRE      : tm"
+          Write-Host "🔑 ŞİFRE      : (Tanımladığınız RDP_PASSWORD)"
           Write-Host "=================================================================="
-
-          Write-Host "Matrix 6 Saat Boyunca Canlı..."
+          
           Start-Sleep -s 21600
