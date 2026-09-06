@@ -23,24 +23,21 @@ jobs:
           Add-LocalGroupMember -Group "Administrators" -Member "runneradmin" -ErrorAction SilentlyContinue
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin" -ErrorAction SilentlyContinue
           
-          Write-Host "3. Cloudflare Tunnel İndiriliyor..."
-          Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
+          Write-Host "3. Pinggy TCP Tüneli Başlatılıyor..."
+          Start-Process -FilePath "ssh" -ArgumentList "-p 443 -o StrictHostKeyChecking=no -R0:localhost:3389 tcp@free.pinggy.io" -NoNewWindow
           
-          Write-Host "4. Doğrudan TCP Quick Tunnel Açılıyor..."
-          # RDP istemcisinin doğrudan bağlanabilmesi için access tcp yerine port lisanlı tunnel tcp komutu
-          Start-Process -FilePath ".\cloudflared.exe" -ArgumentList "tunnel --url tcp://localhost:3389" -NoNewWindow
-          
-          Write-Host "5. GPU Boost (Mesa3D) Hazırlanıyor..."
+          Write-Host "4. GPU Boost (Mesa3D) Hazırlanıyor..."
           $DesktopPath = [Environment]::GetFolderPath("Desktop")
           Invoke-WebRequest "https://github.com/pal1000/mesa-dist-win/releases/download/24.0.7/mesa3d-24.0.7-release-msvc.7z" -OutFile mesa.7z
           Move-Item mesa.7z "$DesktopPath\tmmmGPU_BOOST.7z"
           
-          Write-Host "6. Erişim Bilgileri Hazırlanıyor..."
-          Start-Sleep -s 12
+          Write-Host "5. Erişim Bilgileri Hazırlanıyor..."
+          Start-Sleep -s 10
           
           Write-Host "=================================================================="
           Write-Host "🎉 aMATRIX IS UNSTOPPABLE!"
-          Write-Host "👉 RDP ADRESİ : Loglardaki trycloudflare.com adresini kopyala"
+          Write-Host "👉 Actions loglarında çıkan 'tcp://...:port' adresini kopyala"
+          Write-Host "👉 Bilgisayarındaki 'Uzak Masaüstü Bağlantısı'na (mstsc) yapıştır!"
           Write-Host "👤 KULLANICI  : runneradmin"
           Write-Host "🔑 ŞİFRE      : (Tanımladığınız RDP_PASSWORD)"
           Write-Host "=================================================================="
